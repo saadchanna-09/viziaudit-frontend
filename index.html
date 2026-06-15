@@ -14,7 +14,7 @@
             --critical: #ff5555;
             --warning: #ffb86c;
             --info: #8be9fd;
-        } /* Strict syntax fix for Vite/Tailwind compiler */
+        }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -243,17 +243,8 @@
     </div>
 
     <script>
-       // Us file mein jahan button click handler hai, wahan catch block ko aise badlein:
-try {
-    // Aapka API call yahan hoga
-    const response = await axios.post('https://viziaudit-backend.vercel.app/api/audit', { codeStream });
-    // Data set karne ka logic...
-} catch (error) {
-    console.error("Frontend Request Error:", error);
-    
-    // Pehle yahan hardcoded text set ho raha tha, ab isko aise dynamic kar dein:
-    setBackendError(`Backend Error: ${error.response?.data?.message || error.message}`);
-}
+        const BACKEND_URL = 'https://viziaudit-backend.vercel.app/api/audit';
+        let currentActiveMode = 'code'; 
 
         function switchTab(tabId, element) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -304,8 +295,6 @@ try {
             const metricsGrid = document.getElementById('metricsGrid');
 
             try {
-                // SOLUTION 1 FIX PLACED HERE:
-                // Sanitizing stringification sequences to prevent Node backend line breaks crash (Status 500)
                 const sanitizedCode = sourceCode.replace(/[\r\n]+/g, '\n');
 
                 const response = await fetch(BACKEND_URL, {
@@ -318,12 +307,6 @@ try {
                 });
 
                 if (!response.ok) {
-                    if (response.status === 503) {
-                        throw new Error("Gemini AI Core is overloaded right now (High Demand 503). Please wait 5-10 seconds and try again.");
-                    }
-                    if (response.status === 500) {
-                        throw new Error("Backend Server Error (500): Pure HTML/CSS structures crash the current prompt parser context. Try passing individual component div tokens instead.");
-                    }
                     throw new Error(`Central AI Engine breakdown: Status ${response.status}`);
                 }
 
