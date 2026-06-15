@@ -163,7 +163,6 @@
             cursor: not-allowed;
         }
 
-        /* Metrics Tracker Panel */
         .metrics-grid {
             display: none;
             grid-template-columns: repeat(3, 1fr);
@@ -186,7 +185,6 @@
         .metric-card h4 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
         .metric-card p { font-size: 1.8rem; font-weight: bold; }
 
-        /* Report Output Display */
         .reports-container {
             margin-top: 10px;
         }
@@ -219,16 +217,8 @@
         .badge.warning { background-color: rgba(245, 158, 11, 0.2); color: var(--warning); }
         .badge.suggestion { background-color: rgba(59, 130, 246, 0.2); color: var(--suggestion); }
 
-        .issue-card h3 {
-            font-size: 1.15rem;
-            margin-bottom: 10px;
-        }
-
-        .issue-card .desc {
-            color: var(--text-muted);
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
+        .issue-card h3 { font-size: 1.15rem; margin-bottom: 10px; }
+        .issue-card .desc { color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; }
 
         .fix-box {
             background-color: var(--bg-dark);
@@ -251,17 +241,8 @@
             transition: all 0.2s;
         }
 
-        .fix-btn:hover {
-            background-color: var(--primary);
-            color: #000;
-        }
-
-        .fix-btn.applied {
-            border-color: var(--text-muted);
-            color: var(--text-muted);
-            cursor: not-allowed;
-            background-color: transparent;
-        }
+        .fix-btn:hover { background-color: var(--primary); color: #000; }
+        .fix-btn.applied { border-color: var(--text-muted); color: var(--text-muted); cursor: not-allowed; background-color: transparent; }
 
         .spinner {
             border: 3px solid rgba(255,255,255,0.1);
@@ -296,7 +277,7 @@
             <div id="url-tab" class="tab-content">
                 <div class="input-group">
                     <label for="targetUrl">Target Domain / Endpoint URL:</label>
-                    <input type="url" id="targetUrl" class="input-control" placeholder="https://example.com/landing-page">
+                    <input type="url" id="targetUrl" class="input-control" placeholder="[https://example.com/landing-page](https://example.com/landing-page)">
                 </div>
                 <button class="btn" id="scanBtn" onclick="runUrlScan()">Run Live Visual Scan</button>
             </div>
@@ -332,19 +313,13 @@
     </div>
 
     <script>
-        // Directly embedding the secure direct API verification key token string bypass
-        const GEMINI_DIRECT_KEY = "AIzaSy" + "Bl_YOUR_ACTUAL_KEY_PARTS_HERE"; 
+        // Place your actual API key here
+        const GEMINI_DIRECT_KEY = "AIzaSy" + "CNGtERMCdLKpToEwSlPSr2cpQE5WTqhVU"; 
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
-            if (tabId === 'url-tab') {
-                event.target.classList.add('active');
-                document.getElementById('url-tab').addClass;
-            }
-            
-            // Dynamic simple toggler fix
             const activeTabElement = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
             if(activeTabElement) activeTabElement.classList.add('active');
             document.getElementById(tabId).classList.add('active');
@@ -382,23 +357,47 @@
 
             try {
                 const sanitizedCode = sourceCode.replace(/[\r\n]+/g, '\n');
-
-                const systemInstruction = "You are ViziAudit AI, an expert front-end static analysis engine. Analyze the provided HTML/CSS/React code stream for layout flaws, broken responsiveness, overflow issues, or hardcoded sizes. You MUST return a strictly valid JSON object matching this exact schema: {\"issues\": [{\"type\": \"UI/UX Layout\", \"element\": \"div\", \"severity\": \"critical\", \"description\": \"Reason description\", \"fixSuggestion\": \"Suggested solution text\", \"oldCode\": \"exact old snippet matching source code\", \"fixedCode\": \"exact fully fixed code block\"}]}. Do not include markdown wraps like ```json in the output text block.";
+                const systemInstruction = "You are ViziAudit AI, an expert front-end static analysis engine. Analyze the provided HTML/CSS/React code stream for layout flaws, broken responsiveness, overflow issues, or hardcoded sizes.";
                 const targetPrompt = `Analyze this raw code stream layout for visual flaws now:\n\n${sanitizedCode}`;
 
-                // Stable Production Endpoint URL
-                const targetEndpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_DIRECT_KEY}`;
+                // 🔥 SWITCHED TO v1beta ENDPOINT FOR PROPER SCHEMA AND MIME-TYPE COMPATIBILITY
+                const targetEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_DIRECT_KEY}`;
 
-                // 🔥 FIXED PROPERTY: responseMimeType (camelCase according to Google API core specification)
                 const response = await fetch(targetEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ 
-                            parts: [{ text: systemInstruction + "\n\n" + targetPrompt }] 
+                            parts: [{ text: targetPrompt }] 
                         }],
+                        systemInstruction: {
+                            parts: [{ text: systemInstruction }]
+                        },
                         generationConfig: {
                             responseMimeType: "application/json",
+                            // 🔥 ENFORCING STRICT JSON SCHEMA OUTCOME
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    issues: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                type: { type: "STRING" },
+                                                element: { type: "STRING" },
+                                                severity: { type: "STRING" },
+                                                description: { type: "STRING" },
+                                                fixSuggestion: { type: "STRING" },
+                                                oldCode: { type: "STRING" },
+                                                fixedCode: { type: "STRING" }
+                                            },
+                                            required: ["type", "element", "severity", "description", "fixSuggestion", "oldCode", "fixedCode"]
+                                        }
+                                    }
+                                },
+                                required: ["issues"]
+                            },
                             temperature: 0.1
                         }
                     })
@@ -410,20 +409,11 @@
                 }
 
                 const apiData = await response.json();
-                let jsonOutputText = apiData?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                const jsonOutputText = apiData?.candidates?.[0]?.content?.parts?.[0]?.text || "{\"issues\":[]}";
 
-                // Standard normalization filter for code block markers
-                jsonOutputText = jsonOutputText.trim();
-                if (jsonOutputText.startsWith("```json")) {
-                    jsonOutputText = jsonOutputText.substring(7, jsonOutputText.length - 3).trim();
-                } else if (jsonOutputText.startsWith("```")) {
-                    jsonOutputText = jsonOutputText.substring(3, jsonOutputText.length - 3).trim();
-                }
-
-                const data = JSON.parse(jsonOutputText);
+                const data = JSON.parse(jsonOutputText.trim());
                 const reportIssues = data.issues || [];
 
-                // Track and process score counts
                 const criticalCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'high' || i.severity?.toLowerCase() === 'critical').length;
                 const warningCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'medium' || i.severity?.toLowerCase() === 'warning').length;
                 const suggestionCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'low' || i.severity?.toLowerCase() === 'suggestion').length;
@@ -439,10 +429,9 @@
                         if (issue.severity?.toLowerCase() === 'high' || issue.severity?.toLowerCase() === 'critical') severityClass = 'critical';
                         if (issue.severity?.toLowerCase() === 'medium' || issue.severity?.toLowerCase() === 'warning') severityClass = 'warning';
 
-                        const actualFixedCode = issue.fixedCode || issue.fixed_code || issue.code || '';
-                        const actualOldCode = issue.oldCode || issue.old_code || '';
+                        const actualFixedCode = issue.fixedCode || '';
+                        const actualOldCode = issue.oldCode || '';
 
-                        // Secure dynamic parsing fallback utilizing standard Base64 compilation parameters
                         const b64Old = btoa(unescape(encodeURIComponent(actualOldCode)));
                         const b64Fixed = btoa(unescape(encodeURIComponent(actualFixedCode)));
 
