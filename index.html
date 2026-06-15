@@ -5,7 +5,418 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ViziAudit Enterprise Web Dashboard</title>
     <style>
+        :root {<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViziAudit Enterprise Web Dashboard</title>
+    <style>
         :root {
+            --bg-main: #0d0e12;
+            --bg-card: #16181d;
+            --accent-cyan: #00ca9a;
+            --border-color: #242930;
+            --text-muted: #8b949e;
+            --critical: #ff5555;
+            --warning: #ffb86c;
+            --info: #8be9fd;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 20px;
+            color: #c9d1d9;
+            background-color: var(--bg-main);
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: var(--accent-cyan);
+            font-size: 32px;
+            margin: 0 0 10px 0;
+        }
+
+        /* Tabs System */
+        .tabs-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+            border-bottom: 3px solid var(--accent-cyan);
+            margin-bottom: -2px;
+        }
+
+        .panel {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 0 0 12px 12px;
+            margin-bottom: 30px;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        input[type="url"], textarea {
+            width: 100%;
+            background: #090a0d;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #c9d1d9;
+            padding: 14px;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 16px;
+        }
+
+        textarea {
+            height: 250px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .audit-btn {
+            background: var(--accent-cyan);
+            color: #0d0e12;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 15px;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .audit-btn:hover {
+            background: #00b388;
+        }
+
+        .audit-btn:disabled {
+            background: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            color: var(--accent-cyan);
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        .metrics-grid {
+            display: none;
+            grid-template-cols: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-card h4 { margin: 0; font-size: 14px; }
+        .metric-card p { font-size: 28px; font-weight: bold; margin: 10px 0 0 0; }
+
+        .issue-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .issue-card.critical { border-left: 5px solid var(--critical); }
+        .issue-card.warning { border-left: 5px solid var(--warning); }
+        .issue-card.suggestion { border-left: 5px solid var(--info); }
+
+        .badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .badge.critical { background: rgba(255,85,85,0.1); color: var(--critical); border: 1px solid var(--critical); }
+        .badge.warning { background: rgba(255,184,108,0.1); color: var(--warning); border: 1px solid var(--warning); }
+        .badge.suggestion { background: rgba(139,233,253,0.1); color: var(--info); border: 1px solid var(--info); }
+
+        h3 { margin: 0 0 10px 0; font-size: 16px; color: #ffffff; padding-right: 80px; }
+        .desc { font-size: 14px; color: #b3b9c1; margin: 0 0 16px 0; line-height: 1.4; }
+        .fix-box { background: #090a0d; border: 1px dashed #343942; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; color: var(--accent-cyan); margin-bottom: 15px; }
+
+        .fix-btn {
+            background: var(--accent-cyan);
+            color: #0d0e12;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            transition: opacity 0.2s;
+            margin-top: 10px;
+        }
+        .fix-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔍 ViziAudit Web Workspace</h1>
+            <p style="color: var(--text-muted); margin: 0;">Live AI Layout Audit via URL Scan or Direct Token Injection</p>
+        </div>
+
+        <!-- Tabs Headers -->
+        <div class="tabs-container">
+            <button id="tabUrlHead" class="tab-btn" onclick="switchTab('urlTab', this)">🌐 Scan Live Website URL</button>
+            <button id="tabCodeHead" class="tab-btn active" onclick="switchTab('codeTab', this)">💻 Paste Source Code Stream</button>
+        </div>
+
+        <!-- 🌐 Panel 1: URL Scanner -->
+        <div id="urlTab" class="panel">
+            <label for="webUrl">Target Production Web Link:</label>
+            <input type="url" id="webUrl" placeholder="https://yourwebsite.com" value="https://">
+            <button id="btnUrlSubmit" class="audit-btn" onclick="runUrlAudit()">Trigger Cloud URL Extraction</button>
+        </div>
+
+        <!-- 💻 Panel 2: Code Paste Injection -->
+        <div id="codeTab" class="panel active">
+            <label for="codeStreamInput">Paste raw HTML/CSS Template Tokens:</label>
+            <!-- Id strictly mapped to match javascript hooks -->
+            <textarea id="codeStreamInput" placeholder="<!-- Paste raw components here -->&#10;<div style='width: 1200px;'>...</div>"></textarea>
+            <button id="btnCodeSubmit" class="audit-btn" onclick="runCodePasteAudit()">Compile & Audit Tokens</button>
+        </div>
+
+        <!-- Global Loader -->
+        <div id="globalLoader" class="loader">🧠 Analyzing visual tokens & parsing layout vectors...</div>
+
+        <!-- Results Metric Indicators -->
+        <div id="metricsGrid" class="metrics-grid">
+            <div class="metric-card"><h4 style="color:var(--critical)">Critical Anomalies</h4><p id="critCount" style="color:var(--critical)">0</p></div>
+            <div class="metric-card"><h4 style="color:var(--warning)">Warnings</h4><p id="warnCount" style="color:var(--warning)">0</p></div>
+            <div class="metric-card"><h4 style="color:var(--info)">Suggestions</h4><p id="sugCount" style="color:var(--info)">0</p></div>
+        </div>
+
+        <!-- Output Container -->
+        <div id="reportsContainer"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://viziaudit-backend.vercel.app/api/audit';
+        let currentActiveMode = 'code'; 
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+            currentActiveMode = (tabId === 'urlTab') ? 'url' : 'code';
+        }
+
+        async function runCodePasteAudit() {
+            const textareaElement = document.getElementById('codeStreamInput');
+            if (!textareaElement) {
+                return alert("Critical Error: Textarea elements matching targets missing.");
+            }
+            const codePayload = textareaElement.value.trim();
+            if (!codePayload) return alert("Bhai jani, code toh paste karo pehle!");
+            currentActiveMode = 'code';
+            await processAuditStream(codePayload, "Direct Code Injection Session");
+        }
+
+        async function runUrlAudit() {
+            const urlTarget = document.getElementById('webUrl').value.trim();
+            if (!urlTarget || urlTarget === "https://") return alert("Valid live website link lazmi hai!");
+
+            setLoadingState(true);
+            currentActiveMode = 'url';
+
+            try {
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlTarget)}`;
+                const proxyResponse = await fetch(proxyUrl);
+                if (!proxyResponse.ok) throw new Error("Target web resource parsing blocked by proxy framework.");
+                
+                const wrapperData = await proxyResponse.json();
+                const extractedHtml = wrapperData.contents;
+
+                if (!extractedHtml) throw new Error("Empty payload compiled from target server.");
+
+                await processAuditStream(extractedHtml, urlTarget);
+
+            } catch (err) {
+                alert(`URL Parsing Exception: ${err.message}`);
+                setLoadingState(false);
+            }
+        }
+
+        async function processAuditStream(sourceCode, contextOrigin) {
+            setLoadingState(true);
+            const container = document.getElementById('reportsContainer');
+            const metricsGrid = document.getElementById('metricsGrid');
+
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: contextOrigin,
+                        codeStream: sourceCode
+                    })
+                });
+
+                if (!response.ok) throw new Error("Central AI Engine Core breakdown.");
+
+                const data = await response.json();
+                const reportIssues = data.issues || [];
+
+                const criticalCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'high' || i.severity?.toLowerCase() === 'critical').length;
+                const warningCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'medium' || i.severity?.toLowerCase() === 'warning').length;
+                const suggestionCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'low' || i.severity?.toLowerCase() === 'suggestion').length;
+
+                document.getElementById('critCount').innerText = criticalCount;
+                document.getElementById('warnCount').innerText = warningCount;
+                document.getElementById('sugCount').innerText = suggestionCount;
+                metricsGrid.style.display = 'grid';
+
+                if (reportIssues.length > 0) {
+                    container.innerHTML = reportIssues.map((issue, index) => {
+                        let severityClass = 'suggestion';
+                        if (issue.severity?.toLowerCase() === 'high' || issue.severity?.toLowerCase() === 'critical') severityClass = 'critical';
+                        if (issue.severity?.toLowerCase() === 'medium' || issue.severity?.toLowerCase() === 'warning') severityClass = 'warning';
+
+                        const actualFixedCode = issue.fixedCode || issue.fixed_code || issue.code || '';
+                        const actualOldCode = issue.oldCode || issue.old_code || '';
+
+                        const b64Old = btoa(unescape(encodeURIComponent(actualOldCode)));
+                        const b64Fixed = btoa(unescape(encodeURIComponent(actualFixedCode)));
+
+                        return `
+                        <div class="issue-card ${severityClass}" id="card-${index}">
+                            <span class="badge ${severityClass}">${issue.severity?.toUpperCase() || 'INFO'}</span>
+                            <h3>${index + 1}. [${issue.type || 'UI'}] Location: ${issue.element || 'DOM Element'}</h3>
+                            <p class="desc">${issue.description || 'Analysis trace mapping anomaly.'}</p>
+                            ${issue.fixSuggestion ? `<div class="fix-box"><strong>Suggested Solution:</strong> ${issue.fixSuggestion}</div>` : ''}
+                            
+                            <button class="fix-btn" onclick="applyWebFix('${b64Old}', '${b64Fixed}', ${index})">
+                                ⚡ Apply AI Fix
+                            </button>
+                        </div>`;
+                    }).join('');
+                } else {
+                    container.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">🎉 Operational Excellence! Layout is perfectly dynamic and responsive.</div>`;
+                }
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--critical); font-weight:bold;">❌ Error processing ViziAudit AI request. Trace: ${error.message}</div>`;
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        function applyWebFix(b64Old, b64Fixed, cardIndex) {
+            try {
+                const oldCode = decodeURIComponent(escape(atob(b64Old))).trim();
+                const fixedCode = decodeURIComponent(escape(atob(b64Fixed))).trim();
+
+                if (!fixedCode || fixedCode === "") {
+                    alert("⚠️ AI ne is issue ke liye direct code generate nahi kiya, sirf suggestions di hain.");
+                    return;
+                }
+
+                if (currentActiveMode === 'url') {
+                    alert("Bhai jani, yeh URL mode hai. Isko aap direct browser se live server par edit nahi kar sakte. Code Paste wale tab mein use karein!");
+                    return;
+                }
+
+                const textarea = document.getElementById('codeStreamInput');
+                let currentText = textarea.value;
+
+                if (currentText.includes(oldCode)) {
+                    textarea.value = currentText.replace(oldCode, fixedCode);
+                    alert("🎉 ViziAudit Web: Code snippet updated inside the textarea sandbox successfully!");
+                    document.getElementById(`card-${cardIndex}`).style.opacity = "0.4"; 
+                } else {
+                    const cleanOld = oldCode.replace(/\s+/g, '');
+                    if (currentText.replace(/\s+/g, '').includes(cleanOld)) {
+                        alert("⚠️ Formatting mismatch detected but snippet recognized. Please patch manually using Suggested Box.");
+                    } else {
+                        alert("❌ Purana code block textarea mein match nahi ho saka. Shayad aapne manual editing kar di hai.");
+                    }
+                }
+            } catch (err) {
+                alert("Error executing runtime replacement: " + err.message);
+            }
+        }
+
+        function setLoadingState(isLoading) {
+            const loader = document.getElementById('globalLoader');
+            const btns = document.querySelectorAll('.audit-btn');
+            loader.style.display = isLoading ? 'block' : 'none';
+            btns.forEach(b => b.disabled = isLoading);
+            if(isLoading) {
+                document.getElementById('reportsContainer').innerHTML = '';
+                document.getElementById('metricsGrid').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
             --bg-main: #0d0e12;
             --bg-card: #16181d;
             --accent-cyan: #00ca9a;
