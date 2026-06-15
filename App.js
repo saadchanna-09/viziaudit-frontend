@@ -17,11 +17,18 @@ export default function App() {
         setError('');
         setData(null);
         try {
-            const response = await fetch('https://viziaudit-backend.vercel.app/api/audit"', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
-            });
+           // ❌ Agar pehle aisi koi URL thi:
+// const response = await axios.post('/api/audit', { codeStream });
+// ya const response = await axios.post('http://localhost:5000/api/audit', { codeStream });
+
+//  Usko badal kar aapki production Vercel URL laga dein:
+const response = await axios.post('https://viziaudit-backend.vercel.app/api/audit', {
+    codeStream: codeStream // Yeh key name exact 'codeStream' hi hona chahiye
+}, {
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
             const result = await response.json();
             if (!response.ok)
                 throw new Error(result.error || 'Something went wrong');
