@@ -295,18 +295,25 @@
             const metricsGrid = document.getElementById('metricsGrid');
 
             try {
+                // SOLUTION 1 FIX PLACED HERE:
+                // Sanitizing stringification sequences to prevent Node backend line breaks crash (Status 500)
+                const sanitizedCode = sourceCode.replace(/[\r\n]+/g, '\n');
+
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         url: contextOrigin,
-                        codeStream: sourceCode
+                        codeStream: sanitizedCode
                     })
                 });
 
                 if (!response.ok) {
                     if (response.status === 503) {
                         throw new Error("Gemini AI Core is overloaded right now (High Demand 503). Please wait 5-10 seconds and try again.");
+                    }
+                    if (response.status === 500) {
+                        throw new Error("Backend Server Error (500): Pure HTML/CSS structures crash the current prompt parser context. Try passing individual component div tokens instead.");
                     }
                     throw new Error(`Central AI Engine breakdown: Status ${response.status}`);
                 }
