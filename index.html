@@ -243,8 +243,17 @@
     </div>
 
     <script>
-        const BACKEND_URL = 'https://viziaudit-backend.vercel.app/api/audit';
-        let currentActiveMode = 'code'; 
+       // Us file mein jahan button click handler hai, wahan catch block ko aise badlein:
+try {
+    // Aapka API call yahan hoga
+    const response = await axios.post('https://viziaudit-backend.vercel.app/api/audit', { codeStream });
+    // Data set karne ka logic...
+} catch (error) {
+    console.error("Frontend Request Error:", error);
+    
+    // Pehle yahan hardcoded text set ho raha tha, ab isko aise dynamic kar dein:
+    setBackendError(`Backend Error: ${error.response?.data?.message || error.message}`);
+}
 
         function switchTab(tabId, element) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
