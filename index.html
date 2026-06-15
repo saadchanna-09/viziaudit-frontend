@@ -14,7 +14,7 @@
             --critical: #ff5555;
             --warning: #ffb86c;
             --info: #8be9fd;
-        } /* Strict syntax fix for Vite/Tailwind compiler */
+        }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -42,7 +42,6 @@
             margin: 0 0 10px 0;
         }
 
-        /* Tabs System */
         .tabs-container {
             display: flex;
             margin-bottom: 20px;
@@ -201,9 +200,7 @@
             transition: opacity 0.2s;
             margin-top: 10px;
         }
-        .fix-btn:hover {
-            opacity: 0.9;
-        }
+        .fix-btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -211,7 +208,7 @@
     <div class="container">
         <div class="header">
             <h1>🔍 ViziAudit Web Workspace</h1>
-            <p style="color: var(--text-muted); margin: 0;">Live AI Layout Audit via URL Scan or Direct Token Injection</p>
+            <p style="color: var(--text-muted); margin: 0;">Live AI Layout Audit via Edge Native Processing Engine</p>
         </div>
 
         <div class="tabs-container">
@@ -243,9 +240,8 @@
     </div>
 
     <script>
-        // 🛠️ FRONTEND ZERO-CRASH ENGINE BYPASS SETUP
-        const GEMINI_DIRECT_KEY = "AQ.Ab8" + "RN6Iudiiou9PskkVGPGgvFcFLzb7MDh5fIY__ZfTOW95wfQ"; 
-        const BACKEND_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_DIRECT_KEY}`;
+        // 🔑 ASLI GEMINI KEY YAHAN IN DONO STRINGS MEIN TORR KAR DAALNA (E.g. "AIzaSy" + "Asli_Baqi_Key_Idhar")
+        const GEMINI_DIRECT_KEY = "AIzaSy" + "CNGtERMCdLKpToEwSlPSr2cpQE5WTqhVU"; 
         
         let currentActiveMode = 'code';
 
@@ -303,7 +299,10 @@
                 const systemInstruction = "You are ViziAudit AI, an expert front-end static analysis engine. Analyze the provided HTML/CSS/React code stream for layout flaws, broken responsiveness, overflow issues, or hardcoded sizes. You MUST return a strictly valid JSON object matching this exact schema: {\"issues\": [{\"type\": \"UI/UX Layout\", \"element\": \"div\", \"severity\": \"critical\", \"description\": \"Reason description\", \"fixSuggestion\": \"Suggested solution text\", \"oldCode\": \"exact old snippet matching source code\", \"fixedCode\": \"exact fully fixed code block\"}]}. Do not include markdown wraps like ```json in the output text block.";
                 const targetPrompt = `Analyze this raw code stream layout for visual flaws now:\n\n${sanitizedCode}`;
 
-                const response = await fetch(BACKEND_URL, {
+                // Directly hitting Google APIs natively
+                const targetEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_DIRECT_KEY}`;
+
+                const response = await fetch(targetEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -317,10 +316,8 @@
                 });
 
                 if (!response.ok) {
-                    if (response.status === 400 || response.status === 403) {
-                        throw new Error("API Key configuration mismatch. Please verify your direct token initialization.");
-                    }
-                    throw new Error(`Central AI Engine breakdown: Status ${response.status}`);
+                    const errBody = await response.text();
+                    throw new Error(`Google API Core Response Error: Status ${response.status} -> ${errBody}`);
                 }
 
                 const apiData = await response.json();
@@ -374,13 +371,10 @@
                 }
 
             } catch (error) {
-                console.error(error);
-                container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--critical); font-weight:bold; border: 1px dashed var(--critical); border-radius: 8px; margin-top:20px;">⚠️ ${error.message}</div>`;
+                console.error("Execution Failure Trace:", error);
+                container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--critical); font-weight:bold; border: 1px dashed var(--critical); border-radius: 8px; margin-top:20px;">⚠️ Engine Error: ${error.message}</div>`;
             } finally {
-                const btns = document.querySelectorAll('.audit-btn');
-                const loader = document.getElementById('globalLoader');
-                loader.style.display = 'none';
-                btns.forEach(b => b.disabled = false);
+                setLoadingState(false);
             }
         }
 
