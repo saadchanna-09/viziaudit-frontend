@@ -36,7 +36,7 @@ export default function App() {
     setData(null);
 
     try {
-      const response = await fetch('https://viziaudit-backend.vercel.app', {
+      const response = await fetch('https://viziaudit-backend.vercel.app/api/audit"', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url })
