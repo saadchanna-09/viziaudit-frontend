@@ -240,7 +240,7 @@
     </div>
 
     <script>
-        // 🔑 ASLI GEMINI KEY YAHAN IN DONO STRINGS MEIN TORR KAR DAALNA (E.g. "AIzaSy" + "Asli_Baqi_Key_Idhar")
+        // 🔑 Apni Gemini key yahan dono strings mein tor r kar daalna (E.g. "AIzaSy" + "Asli_Baqi_Key_Idhar")
         const GEMINI_DIRECT_KEY = "AIzaSy" + "CNGtERMCdLKpToEwSlPSr2cpQE5WTqhVU"; 
         
         let currentActiveMode = 'code';
@@ -299,15 +299,17 @@
                 const systemInstruction = "You are ViziAudit AI, an expert front-end static analysis engine. Analyze the provided HTML/CSS/React code stream for layout flaws, broken responsiveness, overflow issues, or hardcoded sizes. You MUST return a strictly valid JSON object matching this exact schema: {\"issues\": [{\"type\": \"UI/UX Layout\", \"element\": \"div\", \"severity\": \"critical\", \"description\": \"Reason description\", \"fixSuggestion\": \"Suggested solution text\", \"oldCode\": \"exact old snippet matching source code\", \"fixedCode\": \"exact fully fixed code block\"}]}. Do not include markdown wraps like ```json in the output text block.";
                 const targetPrompt = `Analyze this raw code stream layout for visual flaws now:\n\n${sanitizedCode}`;
 
-                // Directly hitting Google APIs natively
-                const targetEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_DIRECT_KEY}`;
+                // ✅ FIXED ENDPOINT: Stable v1 standard URL pattern used here
+                const targetEndpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_DIRECT_KEY}`;
 
+                // ✅ FIXED FETCH BODY: Combined content mapping structure
                 const response = await fetch(targetEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: targetPrompt }] }],
-                        systemInstruction: { parts: [{ text: systemInstruction }] },
+                        contents: [{ 
+                            parts: [{ text: systemInstruction + "\n\n" + targetPrompt }] 
+                        }],
                         generationConfig: {
                             responseMimeType: "application/json",
                             temperature: 0.1
