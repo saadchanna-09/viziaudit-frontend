@@ -277,7 +277,7 @@
             <div id="url-tab" class="tab-content">
                 <div class="input-group">
                     <label for="targetUrl">Target Domain / Endpoint URL:</label>
-                    <input type="url" id="targetUrl" class="input-control" placeholder="[https://example.com/landing-page](https://example.com/landing-page)">
+                    <input type="url" id="targetUrl" class="input-control" placeholder="https://example.com/landing-page">
                 </div>
                 <button class="btn" id="scanBtn" onclick="runUrlScan()">Run Live Visual Scan</button>
             </div>
@@ -313,8 +313,8 @@
     </div>
 
     <script>
-        // Place your actual API key here
-        const GEMINI_DIRECT_KEY = "AIzaSy" + "CNGtERMCdLKpToEwSlPSr2cpQE5WTqhVU"; 
+        // 🔥 STABILIZED CENTRAL BACKEND API PATH
+        const BACKEND_URL = "https://viziaudit-backend.vercel.app/api/audit"; 
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -356,62 +356,21 @@
             const metricsGrid = document.getElementById('metricsGrid');
 
             try {
-                const sanitizedCode = sourceCode.replace(/[\r\n]+/g, '\n');
-                const systemInstruction = "You are ViziAudit AI, an expert front-end static analysis engine. Analyze the provided HTML/CSS/React code stream for layout flaws, broken responsiveness, overflow issues, or hardcoded sizes.";
-                const targetPrompt = `Analyze this raw code stream layout for visual flaws now:\n\n${sanitizedCode}`;
-
-                // 🔥 SWITCHED TO v1beta ENDPOINT FOR PROPER SCHEMA AND MIME-TYPE COMPATIBILITY
-                const targetEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_DIRECT_KEY}`;
-
-                const response = await fetch(targetEndpoint, {
+                // 🔥 ROUTING SECURELY THROUGH THE CENTRAL EXPRESS BACKEND VERCEL SERVER
+                const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ 
-                            parts: [{ text: targetPrompt }] 
-                        }],
-                        systemInstruction: {
-                            parts: [{ text: systemInstruction }]
-                        },
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            // 🔥 ENFORCING STRICT JSON SCHEMA OUTCOME
-                            responseSchema: {
-                                type: "OBJECT",
-                                properties: {
-                                    issues: {
-                                        type: "ARRAY",
-                                        items: {
-                                            type: "OBJECT",
-                                            properties: {
-                                                type: { type: "STRING" },
-                                                element: { type: "STRING" },
-                                                severity: { type: "STRING" },
-                                                description: { type: "STRING" },
-                                                fixSuggestion: { type: "STRING" },
-                                                oldCode: { type: "STRING" },
-                                                fixedCode: { type: "STRING" }
-                                            },
-                                            required: ["type", "element", "severity", "description", "fixSuggestion", "oldCode", "fixedCode"]
-                                        }
-                                    }
-                                },
-                                required: ["issues"]
-                            },
-                            temperature: 0.1
-                        }
+                        codeStream: sourceCode // Exact key that matches Express routing middleware
                     })
                 });
 
+                const data = await response.json();
+
                 if (!response.ok) {
-                    const errBody = await response.text();
-                    throw new Error(`Google API Core Response Error: Status ${response.status} -> ${errBody}`);
+                    throw new Error(data.error || data.details || `Server returned status ${response.status}`);
                 }
 
-                const apiData = await response.json();
-                const jsonOutputText = apiData?.candidates?.[0]?.content?.parts?.[0]?.text || "{\"issues\":[]}";
-
-                const data = JSON.parse(jsonOutputText.trim());
                 const reportIssues = data.issues || [];
 
                 const criticalCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'high' || i.severity?.toLowerCase() === 'critical').length;
