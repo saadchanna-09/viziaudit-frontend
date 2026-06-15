@@ -203,6 +203,7 @@
             cursor: pointer;
             font-size: 13px;
             transition: opacity 0.2s;
+            margin-top: 10px;
         }
         .fix-btn:hover {
             opacity: 0.9;
@@ -217,45 +218,38 @@
             <p style="color: var(--text-muted); margin: 0;">Live AI Layout Audit via URL Scan or Direct Token Injection</p>
         </div>
 
-        <!-- Tabs Headers -->
         <div class="tabs-container">
             <button id="tabUrlHead" class="tab-btn" onclick="switchTab('urlTab', this)">🌐 Scan Live Website URL</button>
             <button id="tabCodeHead" class="tab-btn active" onclick="switchTab('codeTab', this)">💻 Paste Source Code Stream</button>
         </div>
 
-        <!-- 🌐 Panel 1: URL Scanner -->
         <div id="urlTab" class="panel">
             <label for="webUrl">Target Production Web Link:</label>
             <input type="url" id="webUrl" placeholder="https://yourwebsite.com" value="https://">
             <button id="btnUrlSubmit" class="audit-btn" onclick="runUrlAudit()">Trigger Cloud URL Extraction</button>
         </div>
 
-        <!-- 💻 Panel 2: Code Paste Injection -->
         <div id="codeTab" class="panel active">
             <label for="codeStreamInput">Paste raw HTML/CSS Template Tokens:</label>
-            <textarea id="codeStreamInput" placeholder="<!-- Paste raw components here -->&#10;<div style='width: 1200px;'>...</div>"></textarea>
+            <textarea id="codeStreamInput" placeholder="&#10;<div style='width: 1200px;'>...</div>"></textarea>
             <button id="btnCodeSubmit" class="audit-btn" onclick="runCodePasteAudit()">Compile & Audit Tokens</button>
         </div>
 
-        <!-- Global Loader -->
         <div id="globalLoader" class="loader">🧠 Analyzing visual tokens & parsing layout vectors...</div>
 
-        <!-- Results Metric Indicators -->
         <div id="metricsGrid" class="metrics-grid">
             <div class="metric-card"><h4 style="color:var(--critical)">Critical Anomalies</h4><p id="critCount" style="color:var(--critical)">0</p></div>
             <div class="metric-card"><h4 style="color:var(--warning)">Warnings</h4><p id="warnCount" style="color:var(--warning)">0</p></div>
             <div class="metric-card"><h4 style="color:var(--info)">Suggestions</h4><p id="sugCount" style="color:var(--info)">0</p></div>
         </div>
 
-        <!-- Output Container -->
         <div id="reportsContainer"></div>
     </div>
 
     <script>
         const BACKEND_URL = 'https://viziaudit-backend.vercel.app/api/audit';
-        let currentActiveMode = 'code'; // tracks whether we scanned 'url' or 'code'
+        let currentActiveMode = 'code'; 
 
-        // Interface Tab Switching Utility
         function switchTab(tabId, element) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -264,7 +258,6 @@
             currentActiveMode = (tabId === 'urlTab') ? 'url' : 'code';
         }
 
-        // Logic 1: Direct Code Paste Processing
         async function runCodePasteAudit() {
             const codePayload = document.getElementById('codeStreamInput').value.trim();
             if (!codePayload) return alert("Bhai jani, code toh paste karo pehle!");
@@ -272,7 +265,6 @@
             await processAuditStream(codePayload, "Direct Code Injection Session");
         }
 
-        // Logic 2: URL Scraper & Auditor Connection
         async function runUrlAudit() {
             const urlTarget = document.getElementById('webUrl').value.trim();
             if (!urlTarget || urlTarget === "https://") return alert("Valid live website link lazmi hai!");
@@ -298,7 +290,6 @@
             }
         }
 
-        // Core Pipeline Transmitter to Cloud Gemini
         async function processAuditStream(sourceCode, contextOrigin) {
             setLoadingState(true);
             const container = document.getElementById('reportsContainer');
@@ -314,12 +305,11 @@
                     })
                 });
 
-                if (!response.ok) throw new Error(`Central AI Engine Core breakdown: Status ${response.status}`);
+                if (!response.ok) throw new Error("Central AI Engine Core breakdown.");
 
                 const data = await response.json();
                 const reportIssues = data.issues || [];
 
-                // Render metrics dashboard configurations
                 const criticalCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'high' || i.severity?.toLowerCase() === 'critical').length;
                 const warningCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'medium' || i.severity?.toLowerCase() === 'warning').length;
                 const suggestionCount = reportIssues.filter(i => i.severity?.toLowerCase() === 'low' || i.severity?.toLowerCase() === 'suggestion').length;
@@ -335,9 +325,12 @@
                         if (issue.severity?.toLowerCase() === 'high' || issue.severity?.toLowerCase() === 'critical') severityClass = 'critical';
                         if (issue.severity?.toLowerCase() === 'medium' || issue.severity?.toLowerCase() === 'warning') severityClass = 'warning';
 
-                        // 🔒 Safely encode string blocks into Base64 to bypass browser execution syntax crashes
-                        const b64Old = btoa(unescape(encodeURIComponent(issue.oldCode || '')));
-                        const b64Fixed = btoa(unescape(encodeURIComponent(issue.fixedCode || '')));
+                        // 🔍 BACKUP/FORCE ATTRIBUTES: Checks alternative property structures from backend
+                        const actualFixedCode = issue.fixedCode || issue.fixed_code || issue.code || '';
+                        const actualOldCode = issue.oldCode || issue.old_code || '';
+
+                        const b64Old = btoa(unescape(encodeURIComponent(actualOldCode)));
+                        const b64Fixed = btoa(unescape(encodeURIComponent(actualFixedCode)));
 
                         return `
                         <div class="issue-card ${severityClass}" id="card-${index}">
@@ -346,11 +339,9 @@
                             <p class="desc">${issue.description || 'Analysis trace mapping anomaly.'}</p>
                             ${issue.fixSuggestion ? `<div class="fix-box"><strong>Suggested Solution:</strong> ${issue.fixSuggestion}</div>` : ''}
                             
-                            ${issue.fixedCode ? `
-                                <button class="fix-btn" onclick="applyWebFix('${b64Old}', '${b64Fixed}', ${index})">
-                                    ⚡ Apply AI Fix
-                                </button>
-                            ` : ''}
+                            <button class="fix-btn" onclick="applyWebFix('${b64Old}', '${b64Fixed}', ${index})">
+                                ⚡ Apply AI Fix
+                            </button>
                         </div>`;
                     }).join('');
                 } else {
@@ -365,34 +356,34 @@
             }
         }
 
-        // 🧠 LIVE LIVE WEB RUNTIME REPLACEMENT ENGINE
         function applyWebFix(b64Old, b64Fixed, cardIndex) {
             try {
-                // Decode fields back to standard string vectors
                 const oldCode = decodeURIComponent(escape(atob(b64Old))).trim();
-                const fixedCode = decodeURIComponent(escape(atob(b64Fixed)));
+                const fixedCode = decodeURIComponent(escape(atob(b64Fixed))).trim();
+
+                if (!fixedCode || fixedCode === "") {
+                    alert("⚠️ AI ne is issue ke liye direct code code generate nahi kiya, sirf suggestions di hain.");
+                    return;
+                }
 
                 if (currentActiveMode === 'url') {
-                    alert("Bhai jani, yeh URL mode hai (Live Production Site). Isko aap direct browser se live server par edit nahi kar sakte. Code Paste wale tab mein code daal kar check karein jahan replacement complete functional hai!");
+                    alert("Bhai jani, yeh URL mode hai. Isko aap direct browser se live server par edit nahi kar sakte. Code Paste wale tab mein use karein!");
                     return;
                 }
 
                 const textarea = document.getElementById('codeStreamInput');
                 let currentText = textarea.value;
 
-                // 1. Exact Match Search & Destroy
                 if (currentText.includes(oldCode)) {
                     textarea.value = currentText.replace(oldCode, fixedCode);
                     alert("🎉 ViziAudit Web: Code snippet updated inside the textarea sandbox successfully!");
-                    document.getElementById(`card-${cardIndex}`).style.opacity = "0.4"; // Soft mute the resolved card
+                    document.getElementById(`card-${cardIndex}`).style.opacity = "0.4"; 
                 } else {
-                    // 2. Fuzzy/Line fallback for web editors
                     const cleanOld = oldCode.replace(/\s+/g, '');
                     if (currentText.replace(/\s+/g, '').includes(cleanOld)) {
-                        // Quick fuzzy match fallback alert
-                        alert("⚠️ Formatting mismatch detected but snippet recognized. Please patch manually inside the editor workspace above using Suggested Box.");
+                        alert("⚠️ Formatting mismatch detected but snippet recognized. Please patch manually using Suggested Box.");
                     } else {
-                        alert("❌ Source token altered or not found in the textarea framework anymore. Please re-run the audit pipeline.");
+                        alert("❌ Purana code block textarea mein match nahi ho saka. Shayad aapne manual editing kar di hai.");
                     }
                 }
             } catch (err) {
@@ -410,6 +401,3 @@
                 document.getElementById('metricsGrid').style.display = 'none';
             }
         }
-    </script>
-</body>
-</html>
